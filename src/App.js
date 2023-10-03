@@ -1,22 +1,40 @@
 import './App.css';
-import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
+import {BrowserRouter, Routes, Route, Navigate, useLocation} from 'react-router-dom';
 import RegisterPage from './components/RegisterPage';
 import LoginPage from './components/LoginPage';
-import HomePage from './components/HomePage'
+import HomePage from './components/ProjectsPage';
+import Sidebar from './components/Sidebar';
+import { UserProvider, useUser} from './components/UserContext';
+import IssuesPage from './components/IssuesPage';
+import { useState } from 'react';
+import ProjectsPage from './components/ProjectsPage';
 
-function App() {
+export default function App() {
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path='/' element = {<Navigate to='/login'/>}/>
-          <Route path='/login' element={<LoginPage/>}/>
-          <Route path='/register' element={<RegisterPage/>}/>
-          <Route path='/home' element={<HomePage/>}/>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <UserProvider>
+      <div className="App">
+        <BrowserRouter>
+          <Sidebar isOpen={isOpen} openModal={openModal} closeModal={closeModal}/>
+          <Routes>
+            <Route path='/' element = {<Navigate to='/login'/>}/>
+            <Route path='/login' element={<LoginPage/>}/>
+            <Route path='/register' element={<RegisterPage/>}/>
+            <Route path='/projects' element={<ProjectsPage openModal={openModal}/>}/>
+            <Route path='/issues' element={<IssuesPage/>}/>
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </UserProvider>
   );
 }
-
-export default App;

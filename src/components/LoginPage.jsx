@@ -5,9 +5,11 @@ import { useState } from 'react'
 import {Link} from "react-router-dom"
 import axios from "axios"
 import { useNavigate } from 'react-router-dom';
+import { useUser } from './UserContext';
 
-function LoginPage() {
-
+export default function LoginPage() {
+    
+    //Email validation
     const [email, setEmail] = useState("");
     const [emailError, setEErorr] = useState("Use Atlassian account email");
     
@@ -15,7 +17,7 @@ function LoginPage() {
         return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
     }
 
-    const validateEmail = event => {
+    const validateEmail = (event) => {
         if(!isValidEmail(event.target.value)){
             setEErorr("Email is not in valid form");
         }else{
@@ -27,28 +29,39 @@ function LoginPage() {
     const [password, setPassword] = useState("")
 
     const navigate = useNavigate();
+    
+    //Access to login function form UserContext
+    const { login } = useUser();
 
-    const login = (event) => {
+    const handleLogin = (event) => {
         event.preventDefault();
         if(emailError === "Email is valid!" && password !== ""){
             axios.post('http://localhost:8000/login', {email: email, password: password})
             .then(res => {
                 if(res.data.Login){
+                    //Set user data
+                    login(res.data.data[0]);
+                    //Save token in local storage
                     localStorage.setItem("token", res.data.token)
-                    navigate('/home')
+                    //navigate to projects
+                    navigate('/projects')
                 }else{
                     alert("Cannot find user")
                 }
-        })
-            .catch(err => console.log(err));
+            })
+            .catch(err => {
+                alert("Login error: " + err);
+                navigate('/login');
+            });
         }
     }
 
     return (
+        <div className='container' style={{marginTop: '60px'}}>
         <div className="login-card">
             <img src={loginImg}/>
             <h2>Log in</h2>
-            <form className="login-form" action="" onSubmit={login}>
+            <form className="login-form" action="" onSubmit={handleLogin}>
                 <input
                     className={`control ${emailError}`}
                     type="email"
@@ -72,7 +85,6 @@ function LoginPage() {
                 </Link>
             </form>
     </div>
+    </div>
     )
 }
-
-export default LoginPage

@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router-dom';
 
 const strengthLabels = ["weak", "medium", "medium", "strong"];
 
-function RegisterPage() {
+export default function RegisterPage() {
 
+    //Email have to be Atlassian account email
     const [email, setEmail] = useState("");
     const [emailError, setEErorr] = useState("Use Atlassian account email");
     
+    //Email validation
     function isValidEmail(email){
         return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
     }
@@ -24,10 +26,12 @@ function RegisterPage() {
         setEmail(event.target.value)
     }
 
+    //Password have to be 8 characters long containing upper case, lower case, digit and symbol
     const [password, setPassword] = useState("");
     const [strength, setStrength] = useState("Upper, lower, digit, symbol");
     const [passErr, setPErr] = useState("Password is empty");
 
+    //Password validation
     const getStrength = (password) => {
         let strengthIndicator = -1;
         let upper = false;
@@ -73,6 +77,7 @@ function RegisterPage() {
 
     const [domain, setDomain] = useState("");
 
+    //Register - save user in the db
     const register = (event) => {
         event.preventDefault();
         if(emailError === "Email is valid!" && passErr === "Password is valid!" && domain !== ""){
@@ -80,57 +85,60 @@ function RegisterPage() {
             .then(res => {
                 console.log(res);
                 navigate('/login');
-        })
-            .catch(err => console.log(err));
+            })
+            .catch(err => {
+                alert("Register error: " + err);
+                navigate('/register');
+            });
         }
     }
 
     return (
-        <div className="login-card">
-            <img src={loginImg}/>
-            <h2>Register</h2>
-            <form className="login-form" action="" onSubmit={register}>
-                <input
-                    className={`control ${emailError}`}
-                    type="email"
-                    placeholder="Email"
-                    onChange={validateEmail}
-                    htmlFor = "email"
-                />
+        <div className='container' style={{marginTop: '15px'}}>
+            <div className="login-card">
+                <img src={loginImg}/>
+                <h2>Register</h2>
+                <form className="login-form" action="" onSubmit={register}>
+                    <input
+                        className={`control ${emailError}`}
+                        type="email"
+                        placeholder="Email"
+                        onChange={validateEmail}
+                        htmlFor = "email"
+                    />
 
-                <div className="text">{emailError && <>{emailError}</>}</div>
+                    <div className="text">{emailError && <>{emailError}</>}</div>
 
-                <input
-                name="password"
-                className="control"
-                type="password"
-                placeholder="Password"
-                maxLength={8}
-                onChange={validatePassword}
-                htmlFor = "password"
-                />
+                    <input
+                    name="password"
+                    className="control"
+                    type="password"
+                    placeholder="Password"
+                    maxLength={8}
+                    onChange={validatePassword}
+                    htmlFor = "password"
+                    />
 
-                <div className={`bars ${strength}`}>
-                    <div></div>
-                </div>
-                <div className="text">{strength && <>{strength} password</>}</div>
-                <div className="text">{passErr && <>{passErr}</>}</div>
+                    <div className={`bars ${strength}`}>
+                        <div></div>
+                    </div>
+                    <div className="text">{strength && <>{strength} password</>}</div>
+                    <div className="text">{passErr && <>{passErr}</>}</div>
 
-                <input
-                name="domain"
-                className="control"
-                type="text"
-                placeholder="Domain"
-                onChange={event => setDomain(event.target.value)}
-                htmlFor = "domain"
-                />
+                    <input
+                    name="domain"
+                    className="control"
+                    type="text"
+                    placeholder="Domain"
+                    onChange={event => setDomain(event.target.value)}
+                    htmlFor = "domain"
+                    />
 
-                <button className="login" type="submit">
-                REGISTER
-                </button>
-            </form>
+                    <button className="login" type="submit">
+                    REGISTER
+                    </button>
+                </form>
+        </div>
     </div>
     )
 }
-
-export default RegisterPage

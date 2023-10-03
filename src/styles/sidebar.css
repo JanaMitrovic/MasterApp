@@ -1,0 +1,44 @@
+.sidebar {
+    width: 250px;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color:  #070b3f;
+    color: #ffffff;
+    padding: 20px;
+}
+
+.item{
+  cursor: pointer;
+  font-size: 20px;
+  padding: 10px;
+  display: flex;
+  justify-content: left;
+  align-items: center;
+}
+
+button.item{
+  color: #ffffff;
+}
+
+.icon{
+  margin-right: 10px;
+}
+
+.modalBox{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: #ffffff;
+    color: black;
+    border-radius: 15px;
+    box-shadow: 5px 5px 10px rgb(85, 90, 92);
+    padding: 20px;
+}
+
+.input{
+  margin-bottom: 50px;
+}
