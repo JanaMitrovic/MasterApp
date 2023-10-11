@@ -110,13 +110,13 @@ export default function RegisterPage() {
                     <div className="text">{emailError && <>{emailError}</>}</div>
 
                     <input
-                    name="password"
-                    className="control"
-                    type="password"
-                    placeholder="Password"
-                    maxLength={8}
-                    onChange={validatePassword}
-                    htmlFor = "password"
+                        name="password"
+                        className="control"
+                        type="password"
+                        placeholder="Password"
+                        maxLength={8}
+                        onChange={validatePassword}
+                        htmlFor = "password"
                     />
 
                     <div className={`bars ${strength}`}>
@@ -126,16 +126,16 @@ export default function RegisterPage() {
                     <div className="text">{passErr && <>{passErr}</>}</div>
 
                     <input
-                    name="domain"
-                    className="control"
-                    type="text"
-                    placeholder="Domain"
-                    onChange={event => setDomain(event.target.value)}
-                    htmlFor = "domain"
+                        name="domain"
+                        className="control"
+                        type="text"
+                        placeholder="Domain"
+                        onChange={event => setDomain(event.target.value)}
+                        htmlFor = "domain"
                     />
 
                     <button className="login" type="submit">
-                    REGISTER
+                        REGISTER
                     </button>
                 </form>
         </div>

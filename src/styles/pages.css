@@ -48,3 +48,15 @@
 .status{
   color: #070b3f;
 }
+
+.assignee{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #070b3f
+}
+
+.card-actions{
+  justify-content: center;
+  padding: 15px;
+}

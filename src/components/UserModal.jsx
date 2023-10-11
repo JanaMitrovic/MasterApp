@@ -43,19 +43,20 @@ export default function UserModal({ isOpen, closeModal }) {
                 onClose={closeModal}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
-                >
+                style={{width: '800'}}
+            >
                 <Box className='modalBox'>
                     <IconButton
-                    edge="end"
-                    color="inherit"
-                    onClick={closeModal}
-                    aria-label="close"
-                    sx={{ position: 'absolute', top: 0, right: 0 }}
+                        edge="end"
+                        color="inherit"
+                        onClick={closeModal}
+                        aria-label="close"
+                        sx={{ position: 'absolute', top: 0, right: 0}}
                     >
                     <CloseIcon style={{marginRight: '10px', color: 'grey'}}/>
                     </IconButton>
                     <Typography id="modal-modal-title" variant="h5" component="h2">
-                    User info
+                        User info
                     </Typography>
                     <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                     <TextField
@@ -67,7 +68,15 @@ export default function UserModal({ isOpen, closeModal }) {
                         }}
                         style={{marginBottom: '20px', width: '100%'}}
                     />
-                    <TextField id="outlined-basic" label="Domain" variant="outlined" style={{marginBottom: '20px', width: '100%'}} defaultValue={user.domain} onChange={(e) => setDomain(e.target.value)} focused/>
+                    <TextField 
+                        id="outlined-basic" 
+                        label="Domain" 
+                        variant="outlined" 
+                        style={{marginBottom: '20px', width: '100%'}} 
+                        defaultValue={user.domain} 
+                        onChange={(e) => setDomain(e.target.value)} 
+                        focused
+                    />
                     <Button variant="contained" style={{backgroundColor: '#070b3f'}} onClick={changeDomain}>Change domain</Button>
                     </Typography>
                 </Box>

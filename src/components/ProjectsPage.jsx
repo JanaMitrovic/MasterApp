@@ -47,8 +47,8 @@ export default function ProjectsPage({openModal}) {
       <div className='project-container'>
         {
           projects.map((project, index) => 
-            <Card sx={{ minWidth: 275 }} key={index} className='card-project' onClick={() => handleCardClick(project)}>
-              <CardContent>
+            <Card sx={{ minWidth: 275 }} key={index} className='card-project'>
+              <CardContent  onClick={() => handleCardClick(project)}>
                 <Typography variant="h5" component="div">
                   {project.name}
                 </Typography>
