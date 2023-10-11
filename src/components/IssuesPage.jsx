@@ -7,9 +7,16 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AddEstimateModal from './AddEstimateModal';
+import CheckInProgressModal from './CheckInProgressModal';
+import StatisticsModal from './StatisticsModal';
+import { useUser } from './UserContext';
 
 export default function IssuesPage() {
 
+    const user = useUser();
+    
     const location = useLocation();
     const project = location.state?.project;
 
@@ -29,7 +36,7 @@ export default function IssuesPage() {
             }
         })
         .then(res => {
-            // console.log(res.data);
+            console.log(res.data);
             setIssues(res.data);
         })
         .catch(err => {
@@ -40,34 +47,116 @@ export default function IssuesPage() {
         }
     }, []);
 
+    const [issue, setIssue] = useState(null);
+
+    const [showEstimateTimeModal, setEstimateTimeModal] = useState(false);
+
+    const [value, setValue] = useState(0);
+
+    const openEstimateTimeModal = async (selectedIssue, value) => {
+        setValue(value);
+        setIssue(selectedIssue);
+        setEstimateTimeModal(true);
+    };
+  
+    const closeEstimateTimeModal = () => {
+        setIssue(null);
+        setEstimateTimeModal(false);
+    };
+
+    //Check if issue is already saved is db (has estimate time)
+    //If res.data/estimate is not 0 that issue already exists
+    const handleEstimateTime = (selectedIssue, modal) => {
+        axios.post('http://localhost:8000/getIssue',{issue: selectedIssue}, {
+            headers: {
+                'access-token' : localStorage.getItem("token")
+                }
+            })
+            .then(res => {
+                //res.data is estimate time
+                if(modal === "TO DO"){
+                    openEstimateTimeModal(selectedIssue, res.data);
+                }else if (modal === "IN PROGRESS"){
+                    openInProgressModal(selectedIssue, res.data);
+                }else if(modal === "DONE"){
+                    openStatisticsModal(selectedIssue, res.data)
+                }
+                
+            })
+            .catch(err => {
+                alert("Error get issue: " + err);
+            }
+        )
+    }
+
+    const [showInProgressModal, setInProgressModal] = useState(false);
+
+    const openInProgressModal = (selectedIssue, value) => {
+        setValue(value);
+        setIssue(selectedIssue);
+        setInProgressModal(true);
+    };
+  
+    const closeInProgressModal = () => {
+        setIssue(null);
+        setInProgressModal(false);
+    };
+
+    const [showStatisticsModal, setStatisticsModal] = useState(false);
+
+    const openStatisticsModal = (selectedIssue, value) => {
+        setValue(value);
+        setIssue(selectedIssue);
+        setStatisticsModal(true);
+    };
+  
+    const closeStatisticsModal = () => {
+        setIssue(null);
+        setStatisticsModal(false);
+    };
+
     return (
         <div className='page'>
                 <div className='issue-container'>
                     <div className='column1'>
                         <h2 className='status'>TO DO</h2>
                         {
-                        issues
-                        .filter((issue) => {
-                            return issue.status === 'To Do';
-                        })
-                        .map((issue, index) => 
-                        <Card sx={{ minWidth: 275 }} key={index} className='card-issue'>
-                            <CardContent>
-                            <Typography variant="h5" component="div">
-                                {issue.key}
-                            </Typography>
-                            <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                                {issue.project}
-                            </Typography>
-                            <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                                {issue.status}
-                            </Typography>
-                            </CardContent>
-                            <CardActions>
-                            <Button size="small">Show</Button>
-                            </CardActions>
-                        </Card>
-                        )
+                            issues
+                            .filter((issue) => {
+                                return issue.status === 'To Do';
+                            })
+                            .sort((a, b) => {
+                                return a.id - b.id;
+                            })
+                            .map((issue, index) => 
+                                <Card sx={{ minWidth: 275 }} key={index} className='card-issue'>
+                                    <CardContent>
+                                        <Typography variant="h5" component="div">
+                                            {issue.name}
+                                        </Typography>
+                                        <Typography color="text.secondary">
+                                            {issue.key}
+                                        </Typography>
+                                        <br />
+                                        <Typography className='assignee'>
+                                            <AccountCircleIcon style={{marginRight: '5px'}}/> {issue.assignee === null ? "No assignee" : issue.assignee.displayName}
+                                        </Typography>
+                                    </CardContent>
+                                    {(issue.assignee !== null && user.user.email == issue.assignee.emailAddress) && 
+                                        <>
+                                            <CardActions className='card-actions'>
+                                                <Button 
+                                                    variant="contained" 
+                                                    size='small' 
+                                                    style={{width: '100%', backgroundColor: '#5F6F94'}}
+                                                    onClick={() => handleEstimateTime(issue, "TO DO")}
+                                                >Estimate time</Button>
+                                            </CardActions>
+                                        </>    
+                                    }
+                                    
+                                </Card>
+                            )
                         }
                     </div>
                     <div className='column2'>
@@ -77,25 +166,34 @@ export default function IssuesPage() {
                             .filter((issue) => {
                                 return issue.status === 'In Progress';
                             })
+                            .sort((a, b) => {
+                                return a.id - b.id;
+                            })
                             .map((issue, index) => 
                             <Card sx={{ minWidth: 275 }} key={index} className='card-issue'>
                                 <CardContent>
-                                <Typography variant="h5" component="div">
-                                    {issue.key}
-                                </Typography>
-                                <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                                    {issue.project}
-                                </Typography>
-                                <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                                    {issue.status}
-                                </Typography>
+                                    <Typography variant="h5" component="div">
+                                        {issue.name}
+                                    </Typography>
+                                    <Typography color="text.secondary">
+                                        {issue.key}
+                                    </Typography>
+                                    <br />
+                                    <Typography className='assignee'>
+                                        <AccountCircleIcon style={{marginRight: '5px'}}/> {issue.assignee === null ? "No assignee" : issue.assignee.displayName}
+                                    </Typography>
                                 </CardContent>
-                                <CardActions>
-                                <Button size="small">Show</Button>
+                                <CardActions className='card-actions'>
+                                    <Button 
+                                        variant="contained" 
+                                        size='small' 
+                                        style={{width: '100%', backgroundColor: '#5F6F94'}}
+                                        onClick={() => handleEstimateTime(issue, 'IN PROGRESS')}
+                                    >Check time in progress</Button>
                                 </CardActions>
                             </Card>
                             )
-                            }
+                        }
                     </div>
                     <div className='column3'>
                         <h2 className='status'>DONE</h2>
@@ -104,27 +202,39 @@ export default function IssuesPage() {
                             .filter((issue) => {
                                 return issue.status === 'Done';
                             })
+                            .sort((a, b) => {
+                                return a.id - b.id;
+                            })
                             .map((issue, index) => 
                             <Card sx={{ minWidth: 275 }} key={index} className='card-issue'>
                                 <CardContent>
-                                <Typography variant="h5" component="div">
-                                    {issue.key}
-                                </Typography>
-                                <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                                    {issue.project}
-                                </Typography>
-                                <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                                    {issue.status}
-                                </Typography>
+                                    <Typography variant="h5" component="div">
+                                        {issue.name}
+                                    </Typography>
+                                    <Typography color="text.secondary">
+                                        {issue.key}
+                                    </Typography>
+                                    <br />
+                                    <Typography className='assignee'>
+                                        <AccountCircleIcon style={{marginRight: '5px'}}/> {issue.assignee === null ? "No assignee" : issue.assignee.displayName}
+                                    </Typography>
                                 </CardContent>
-                                <CardActions>
-                                <Button size="small">Show</Button>
+                                <CardActions className='card-actions'>
+                                    <Button 
+                                        variant="contained" 
+                                        size='small' 
+                                        style={{width: '100%', backgroundColor: '#5F6F94'}}
+                                        onClick={() => handleEstimateTime(issue, "DONE")}
+                                    >Show statistics</Button>
                                 </CardActions>
                             </Card>
                             )
-                            }
+                        }
                     </div>
                 </div>
+                <AddEstimateModal showEstimateTimeModal={showEstimateTimeModal} closeEstimateTimeModal={closeEstimateTimeModal} issue={issue} value={value}/>
+                <CheckInProgressModal showInProgressModal={showInProgressModal} closeInProgressModal={closeInProgressModal} issue={issue} value={value}/>
+                <StatisticsModal showStatisticsModal={showStatisticsModal} closeStatsticsModal={closeStatisticsModal} issue={issue} value={value}/> 
             </div>
     )
 }
