@@ -8,6 +8,7 @@ import { UserProvider, useUser} from './components/UserContext';
 import IssuesPage from './components/IssuesPage';
 import { useState } from 'react';
 import ProjectsPage from './components/ProjectsPage';
+import StatisticsPage from './components/StatisticsPage';
 
 export default function App() {
 
@@ -32,6 +33,7 @@ export default function App() {
             <Route path='/register' element={<RegisterPage/>}/>
             <Route path='/projects' element={<ProjectsPage openModal={openModal}/>}/>
             <Route path='/issues' element={<IssuesPage/>}/>
+            <Route path='/statistics' element={<StatisticsPage/>}/>
           </Routes>
         </BrowserRouter>
       </div>

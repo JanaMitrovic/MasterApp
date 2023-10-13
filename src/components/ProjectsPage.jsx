@@ -42,6 +42,46 @@ export default function ProjectsPage({openModal}) {
     navigate('/issues', {state: {project: project}});
   }; 
 
+  const getProjectStatistics = (project) => {
+    axios.post('http://localhost:8000/statistics/project', {project: project.id}, {
+    headers: {
+        'access-token' : localStorage.getItem("token")
+        }
+    })
+    .then(res => {
+        if(res.data){
+            console.log(res.data)
+            navigate('/statistics', {state: {data: res.data}});
+        }else{
+            alert("Cannot get project statistics!")
+        }
+    })
+    .catch(err => {
+        alert("Get project statistics error: " + err);
+        navigate('/projects');
+    });
+  }
+
+  const getProjectUserStatistics = (project) => {
+    axios.post('http://localhost:8000/statistics/project/user', {project: project.id}, {
+    headers: {
+        'access-token' : localStorage.getItem("token")
+        }
+    })
+    .then(res => {
+        if(res.data){
+            console.log(res.data)
+            navigate('/statistics', {state: {data: res.data}});
+        }else{
+            alert("Cannot get project statistics!")
+        }
+    })
+    .catch(err => {
+        alert("Get project statistics error: " + err);
+        navigate('/projects');
+    });
+  }
+
   return (
     <div className='page'>
       <div className='project-container'>
@@ -56,8 +96,21 @@ export default function ProjectsPage({openModal}) {
                   {project.key}
                 </Typography>
               </CardContent>
-              <CardActions>
-                <Button size="small">Show</Button>
+              <CardActions className='card-actions'>
+                <div  style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+                  <Button 
+                      variant="contained" 
+                      size='small' 
+                      style={{width: '100%', backgroundColor: '#1ba182', marginBottom: '5px'}}
+                      onClick={() => getProjectStatistics(project)}
+                  >Show project statistics</Button>
+                  <Button 
+                      variant="contained" 
+                      size='small' 
+                      style={{width: '100%', backgroundColor: '#1ba182', marginBottom: '5px'}}
+                      onClick={() => getProjectUserStatistics(project)}
+                  >Show my statistics</Button>
+                </div>
               </CardActions>
             </Card>
           )

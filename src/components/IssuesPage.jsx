@@ -148,7 +148,7 @@ export default function IssuesPage() {
                                                 <Button 
                                                     variant="contained" 
                                                     size='small' 
-                                                    style={{width: '100%', backgroundColor: '#5F6F94'}}
+                                                    style={{width: '100%', backgroundColor: '#1ba182'}}
                                                     onClick={() => handleEstimateTime(issue, "TO DO")}
                                                 >Estimate time</Button>
                                             </CardActions>
@@ -187,7 +187,7 @@ export default function IssuesPage() {
                                     <Button 
                                         variant="contained" 
                                         size='small' 
-                                        style={{width: '100%', backgroundColor: '#5F6F94'}}
+                                        style={{width: '100%', backgroundColor: '#1ba182'}}
                                         onClick={() => handleEstimateTime(issue, 'IN PROGRESS')}
                                     >Check time in progress</Button>
                                 </CardActions>
@@ -223,7 +223,7 @@ export default function IssuesPage() {
                                     <Button 
                                         variant="contained" 
                                         size='small' 
-                                        style={{width: '100%', backgroundColor: '#5F6F94'}}
+                                        style={{width: '100%', backgroundColor: '#1ba182'}}
                                         onClick={() => handleEstimateTime(issue, "DONE")}
                                     >Show statistics</Button>
                                 </CardActions>
