@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import url from 'url';
 import { error } from "console";
 import moment from "moment-timezone";
+import { rejects } from "assert";
 
 dotenv.config({path: './.env'});
 
@@ -65,6 +66,7 @@ app.post('/login', async (req, res) => {
 
 const varifyJwt = (req, res, next) => {
     const token = req.headers["access-token"];
+    console.log(token);
     if (!token) {
         return res.status(401).json({ error: 'No token provided' });
     }
@@ -242,36 +244,110 @@ app.get('/getInProgressTime', varifyJwt, async (req, res) => {
     const key = parsedUrl.query.key;
     const status = parsedUrl.query.status;
 
-    fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
-    method: 'GET',
-    headers: {
-        'Authorization': `Basic ${Buffer.from(
-        `${req.user.email}:` + process.env.API_TOKEN
-        ).toString('base64')}`,
-        'Accept': 'application/json'
-    }
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Request failed');
-        }
-    })
-    .then(data => {
+    // fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
+    // method: 'GET',
+    // headers: {
+    //     'Authorization': `Basic ${Buffer.from(
+    //     `${req.user.email}:` + process.env.API_TOKEN
+    //     ).toString('base64')}`,
+    //     'Accept': 'application/json'
+    // }
+    // })
+    // .then(response => {
+    //     if (response.ok) {
+    //         return response.json();
+    //     } else {
+    //         throw new Error('Request failed');
+    //     }
+    // })
+    // .then(data => {
+    //     let response = null;
+    //     if(status === "In Progress"){
+    //         response = EstimateInProgress(data.values, data.total);
+    //     }else if(status === "Done"){
+    //         response = EstimateDone(data.values, data.total);
+    //     }
+    //     res.status(200).json(response);
+    // })
+    // .catch(err => {
+    //     console.error(err);
+    //     res.status(500).send('Internal Server Error');
+    // });
+
+    // const data = getInProgressTime(req, res, key, status);
+    // let response = null;
+    //     if(status === "In Progress"){
+    //         response = EstimateInProgress(data.values, data.total);
+    //     }else if(status === "Done"){
+    //         response = EstimateDone(data.values, data.total);
+    //     }
+    //     res.status(200).json(response);
+
+    try {
+        const data = await getInProgressTime(req, key);
+    
         let response = null;
-        if(status === "In Progress"){
-            response = EstimateInProgress(data.values, data.total);
-        }else if(status === "Done"){
-            response = EstimateDone(data.values, data.total);
+        if (status === "In Progress") {
+          response = EstimateInProgress(data.values, data.total);
+        } else if (status === "Done") {
+          response = EstimateDone(data.values, data.total);
         }
+    
         res.status(200).json(response);
-    })
-    .catch(err => {
-        console.error(err);
+    } catch (error) {
+        console.error(error);
         res.status(500).send('Internal Server Error');
-    });
+    }
+
 })
+
+async function getInProgressTime(req, key){
+
+    // fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
+    // method: 'GET',
+    // headers: {
+    //     'Authorization': `Basic ${Buffer.from(
+    //     `${req.user.email}:` + process.env.API_TOKEN
+    //     ).toString('base64')}`,
+    //     'Accept': 'application/json'
+    // }
+    // })
+    // .then(response => {
+    //     if (response.ok) {
+    //         return response.json();
+    //     } else {
+    //         throw new Error('Request failed');
+    //     }
+    // })
+    // .catch(err => {
+    //     console.error(err);
+    //     res.status(500).send('Internal Server Error');
+    // });
+
+    try {
+        const response = await fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Basic ${Buffer.from(
+                    `${req.user.email}:` + process.env.API_TOKEN
+                ).toString('base64')}`,
+                'Accept': 'application/json'
+            }
+        });
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Request failed with status: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Response text: ${errorText}`);
+            throw new Error(`Request failed with status: ${response.status}`);
+        }
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+    
+}
 
 function EstimateInProgress(values, count){
     //If issue has status "In Progress"
@@ -426,13 +502,149 @@ function getHoursDifference(firstDate, firstTime, secondDate, secondTime){
     }else{
         const duration1 = moment.duration(end.diff(firstTime));
         const duration2 = moment.duration(secondTime.diff(start));
-        const duration = Math.floor(duration1.asMinutes()) + Math.floor(duration2.asMinutes()) + 8*daysDifference;
+        const duration = Math.floor(duration1.asMinutes()) + Math.floor(duration2.asMinutes()) + 8*60*daysDifference;
         hoursDifference = Math.floor(duration);
     }
 
-    // console.log("Hours: " + hoursDifference);
 
     return hoursDifference;
+}
+
+async function getIssuesStatistics(req, res, issues){
+    let keys = [];
+        let actuals = [];
+        let estimates = [];
+
+        for (const issue of issues) {
+            try {
+                const data = await getInProgressTime(req, issue.issueKey);
+
+                let response = null;
+                if (issue.status === "In Progress") {
+                    response = EstimateInProgress(data.values, data.total);
+                } else if (issue.status === "Done") {
+                    response = EstimateDone(data.values, data.total);
+                }
+
+                keys.push(issue.issueKey);
+                estimates.push(issue.estimate*60);
+                actuals.push(response.timeDifference);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+                return;
+            }
+        }
+
+        const response = {
+            keys: keys, 
+            estimates: estimates,
+            actuals: actuals
+        }
+
+        return response;
+}
+
+app.post('/statistics/project', varifyJwt,  async (req, res) => {
+    try {
+        const issues = await getProjectIssues(req);
+
+        const response = await getIssuesStatistics(req, res, issues);
+
+        res.status(200).json(response);
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).json("Error: Cannot get project statistics!");
+      }
+    
+})
+
+function getProjectIssues(req){
+    // const sql = "SELECT * FROM issues WHERE `projectId` = ?";
+    // db.query(sql, [req.body.project], async (err, data) => {
+    //     if(err){
+    //         return res.json("Error: Cannot get project statistics!");
+    //     }
+    //     if(data.length > 0){
+    //         return data;
+    //         // res.status(200).json(data);            
+    //     }else{
+    //         return res.json("Fail")
+    //     }
+    // })
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM issues WHERE `projectId` = ?";
+        db.query(sql, [req.body.project], (err, data) => {
+          if (err) {
+            reject(err);
+          } else if (data.length > 0) {
+            resolve(data);
+          } else {
+            reject("Fail");
+          }
+        });
+      });
+}
+
+app.post('/statistics/project/user', varifyJwt,  async (req, res) => {
+    try {
+        const issues = await getProjectUserIssues(req);
+
+        const response = await getIssuesStatistics(req, res, issues);
+
+        res.status(200).json(response);
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).json("Error: Cannot get project statistics!");
+      }
+    
+})
+
+function getProjectUserIssues(req){
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM issues WHERE `projectId` = ? AND `assignee` = ?";
+        db.query(sql, [req.body.project, req.user.email], (err, data) => {
+          if (err) {
+            reject(err);
+          } else if (data.length > 0) {
+            resolve(data);
+          } else {
+            reject("Fail");
+          }
+        });
+      });
+}
+
+app.get('/statistics/user', varifyJwt,  async (req, res) => {
+    try {
+        const issues = await getUserIssues(req);
+
+        const response = await getIssuesStatistics(req, res, issues);
+
+        res.status(200).json(response);
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).json("Error: Cannot get project statistics!");
+      }
+    
+})
+
+function getUserIssues(req){
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM issues WHERE `assignee` = ?";
+        db.query(sql, [req.user.email], (err, data) => {
+          if (err) {
+            reject(err);
+          } else if (data.length > 0) {
+            resolve(data);
+          } else {
+            reject("Fail");
+          }
+        });
+      });
 }
 
 
