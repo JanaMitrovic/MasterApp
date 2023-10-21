@@ -31,18 +31,13 @@ export default function App() {
       <div className="App">
         <BrowserRouter>
           <Sidebar isOpen={isOpen} openModal={openModal} closeModal={closeModal}/>
-          {(sessionStorage.getItem('token') == null) && <Navigate to="/login" />}
           <Routes>
             <Route path='/' element = {<Navigate to='/login'/>}/>
             <Route path='/login' element={<LoginPage/>}/>
             <Route path='/register' element={<RegisterPage/>}/>
-            {sessionStorage.getItem('token') ? (
-              <>
-                <Route path='/projects' element={<ProjectsPage openModal={openModal}/>}/>
-                <Route path='/issues' element={<IssuesPage/>}/>
-                <Route path='/statistics' element={<StatisticsPage/>}/>
-              </>
-            ) : null}
+            <Route path='/projects' element={<ProjectsPage openModal={openModal}/>}/>
+            <Route path='/issues' element={<IssuesPage/>}/>
+            <Route path='/statistics' element={<StatisticsPage/>}/>
           </Routes>
         </BrowserRouter>
       </div>
