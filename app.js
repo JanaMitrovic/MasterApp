@@ -66,7 +66,7 @@ app.post('/login', async (req, res) => {
 
 const varifyJwt = (req, res, next) => {
     const token = req.headers["access-token"];
-    console.log(token);
+    // console.log(token);
     if (!token) {
         return res.status(401).json({ error: 'No token provided' });
     }
@@ -201,7 +201,7 @@ app.post('/getIssue', varifyJwt, async (req, res) => {
 })
 
 app.post('/saveIssue', varifyJwt, async (req, res) => {
-    const sql = "INSERT INTO issues (`userId`, `issueId`, `projectId`, `assignee`, `estimate`, `actual`) VALUES (?)";
+    const sql = "INSERT INTO issues (`userId`, `issueId`, `projectId`, `issueKey`, `status`, `assignee`, `estimate`, `actual`) VALUES (?)";
     let assignee = "";
     if(req.body.issue.assignee !== null){
         assignee = req.body.issue.assignee.emailAddress;
@@ -210,6 +210,8 @@ app.post('/saveIssue', varifyJwt, async (req, res) => {
         req.userId,
         req.body.issue.id,
         req.body.issue.project.id,
+        req.body.issue.key,
+        req.body.issue.status,
         assignee,
         req.body.estimate,
         0
@@ -512,51 +514,56 @@ function getHoursDifference(firstDate, firstTime, secondDate, secondTime){
 
 async function getIssuesStatistics(req, res, issues){
     let keys = [];
-        let actuals = [];
-        let estimates = [];
+    let actuals = [];
+    let estimates = [];
 
-        for (const issue of issues) {
-            try {
-                const data = await getInProgressTime(req, issue.issueKey);
+    for (const issue of issues) {
+        try {
+            const data = await getInProgressTime(req, issue.issueKey);
 
-                let response = null;
-                if (issue.status === "In Progress") {
-                    response = EstimateInProgress(data.values, data.total);
-                } else if (issue.status === "Done") {
-                    response = EstimateDone(data.values, data.total);
-                }
-
-                keys.push(issue.issueKey);
-                estimates.push(issue.estimate*60);
-                actuals.push(response.timeDifference);
-            } catch (error) {
-                console.error(error);
-                res.status(500).send('Internal Server Error');
-                return;
+            let response = null;
+            if (issue.status === "In Progress") {
+                response = EstimateInProgress(data.values, data.total);
+            } else if (issue.status === "Done") {
+                response = EstimateDone(data.values, data.total);
+            }else if(issue.status === "To Do"){
+                continue;
             }
-        }
 
-        const response = {
-            keys: keys, 
-            estimates: estimates,
-            actuals: actuals
+            keys.push(issue.issueKey);
+            estimates.push(issue.estimate*60);
+            actuals.push(response.timeDifference);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+            return;
         }
+    }
 
-        return response;
+    const response = {
+        keys: keys, 
+        estimates: estimates,
+        actuals: actuals,
+        message: "OK"
+    }
+
+    return response;
 }
 
 app.post('/statistics/project', varifyJwt,  async (req, res) => {
     try {
         const issues = await getProjectIssues(req);
 
-        const response = await getIssuesStatistics(req, res, issues);
-
-        res.status(200).json(response);
-
-      } catch (error) {
-        console.error(error);
-        res.status(500).json("Error: Cannot get project statistics!");
-      }
+        if(issues.length > 0){
+            const response = await getIssuesStatistics(req, res, issues);
+            res.status(200).json(response);
+        }else{
+            res.status(200).json({"message": "No issues found!"});
+        }
+    } catch (error) {
+    console.error(error);
+    res.status(500).json("Error: Cannot get project statistics!");
+    }
     
 })
 
@@ -578,11 +585,14 @@ function getProjectIssues(req){
         db.query(sql, [req.body.project], (err, data) => {
           if (err) {
             reject(err);
-          } else if (data.length > 0) {
+          } else{
             resolve(data);
-          } else {
-            reject("Fail");
           }
+        //   else if (data.length > 0) {
+        //     resolve(data);
+        //   } else {
+        //     resolve
+        //   }
         });
       });
 }
@@ -591,10 +601,12 @@ app.post('/statistics/project/user', varifyJwt,  async (req, res) => {
     try {
         const issues = await getProjectUserIssues(req);
 
-        const response = await getIssuesStatistics(req, res, issues);
-
-        res.status(200).json(response);
-
+        if(issues.length > 0){
+            const response = await getIssuesStatistics(req, res, issues);
+            res.status(200).json(response);
+        }else{
+            res.status(200).json({"message": "No issues found!"});
+        } 
       } catch (error) {
         console.error(error);
         res.status(500).json("Error: Cannot get project statistics!");
@@ -608,11 +620,14 @@ function getProjectUserIssues(req){
         db.query(sql, [req.body.project, req.user.email], (err, data) => {
           if (err) {
             reject(err);
-          } else if (data.length > 0) {
+          } else{
             resolve(data);
-          } else {
-            reject("Fail");
           }
+        //   else if (data.length > 0) {
+        //     resolve(data);
+        //   } else {
+        //     reject("Fail");
+        //   }
         });
       });
 }
@@ -621,9 +636,12 @@ app.get('/statistics/user', varifyJwt,  async (req, res) => {
     try {
         const issues = await getUserIssues(req);
 
-        const response = await getIssuesStatistics(req, res, issues);
-
-        res.status(200).json(response);
+        if(issues.length > 0){
+            const response = await getIssuesStatistics(req, res, issues);
+            res.status(200).json(response);
+        }else{
+            res.status(200).json({"message": "No issues found!"});
+        }
 
       } catch (error) {
         console.error(error);
