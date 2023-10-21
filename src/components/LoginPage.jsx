@@ -41,7 +41,7 @@ export default function LoginPage() {
                 if(res.data.Login){
                     //Set user data
                     login(res.data.data[0]);
-                    console.log(res.data.data[0]);
+                    // console.log(res.data.data[0]);
                     //Save token in local storage
                     localStorage.setItem("token", res.data.token)
                     //navigate to projects

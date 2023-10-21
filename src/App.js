@@ -2,7 +2,6 @@ import './App.css';
 import {BrowserRouter, Routes, Route, Navigate, useLocation} from 'react-router-dom';
 import RegisterPage from './components/RegisterPage';
 import LoginPage from './components/LoginPage';
-import HomePage from './components/ProjectsPage';
 import Sidebar from './components/Sidebar';
 import { UserProvider, useUser} from './components/UserContext';
 import IssuesPage from './components/IssuesPage';
@@ -25,6 +24,16 @@ export default function App() {
   window.addEventListener('beforeunload', function (event) {
     localStorage.clear();
   });
+
+  const ProtectedRoute = ({ element, ...rest }) => {
+    const { user } = useUser();
+  
+    if (user.isAuthenticated) {
+      return <Route {...rest} element={element} />;
+    } else {
+      return <Navigate to="/login" />;
+    }
+  };
 
   return (
     <UserProvider>
