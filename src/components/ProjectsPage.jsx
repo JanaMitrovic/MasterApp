@@ -6,7 +6,9 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 
 export default function ProjectsPage({openModal}) {
 
@@ -42,14 +44,17 @@ export default function ProjectsPage({openModal}) {
     navigate('/issues', {state: {project: project}});
   }; 
 
+  const [loading, setLoading] = useState(false);
+
   const getProjectStatistics = (project) => {
+    setLoading(true);
     axios.post('http://localhost:8000/statistics/project', {project: project.id}, {
     headers: {
         'access-token' : localStorage.getItem("token")
         }
     })
     .then(res => {
-        if(res.data){
+        if(res.data.message == "OK"){
             console.log(res.data)
             navigate('/statistics', {state: {data: res.data}});
         }else{
@@ -59,18 +64,21 @@ export default function ProjectsPage({openModal}) {
     .catch(err => {
         alert("Get project statistics error: " + err);
         navigate('/projects');
+    }).finally(() => {
+      setLoading(false);
     });
   }
 
   const getProjectUserStatistics = (project) => {
+    setLoading(true);
     axios.post('http://localhost:8000/statistics/project/user', {project: project.id}, {
     headers: {
         'access-token' : localStorage.getItem("token")
         }
     })
     .then(res => {
-        if(res.data){
-            console.log(res.data)
+        if(res.data.message == "OK"){
+            console.log(res)
             navigate('/statistics', {state: {data: res.data}});
         }else{
             alert("Cannot get project statistics!")
@@ -79,11 +87,14 @@ export default function ProjectsPage({openModal}) {
     .catch(err => {
         alert("Get project statistics error: " + err);
         navigate('/projects');
+    }).finally(() => {
+      setLoading(false);
     });
   }
 
   return (
     <div className='page'>
+      {loading == false ? (
       <div className='project-container'>
         {
           projects.map((project, index) => 
@@ -103,6 +114,7 @@ export default function ProjectsPage({openModal}) {
                       size='small' 
                       style={{width: '100%', backgroundColor: '#1ba182', marginBottom: '5px'}}
                       onClick={() => getProjectStatistics(project)}
+                      disabled={loading}
                   >Show project statistics</Button>
                   <Button 
                       variant="contained" 
@@ -115,7 +127,11 @@ export default function ProjectsPage({openModal}) {
             </Card>
           )
         }
-      </div>
+      </div> ) :(
+        <Box sx={{ display: 'flex', justifyContent: 'center'}}>
+          <CircularProgress sx={{ marginTop: '300px'}}/>
+        </Box>
+      )}
     </div>
   )
 }
