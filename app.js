@@ -55,13 +55,12 @@ app.post('/login', async (req, res) => {
         if(data.length > 0){
             const id = data[0].id;
             //create token and sign user data to it
-            const token = jwt.sign({id, userData: data[0]}, process.env.SECRET_KEY); //, {expiresIn: 3000}
+            const token = jwt.sign({id, userData: data[0]}, process.env.SECRET_KEY);
             return res.json({Login: true, token, data})
         }else{
             return res.json("Fail")
         }
     })
-    
 })
 
 const varifyJwt = (req, res, next) => {
@@ -168,13 +167,10 @@ app.get('/getProjectIssues', varifyJwt, async (req, res) => {
                 name: issues[i].fields.summary,
                 project: issues[i].fields.project,
                 status: issues[i].fields.status.name,
-                assignee: issues[i].fields.assignee,
-                story_points: issues[i].fields.customfield_10016,
-                sprint: issues[i].fields.customfield_10020
+                assignee: issues[i].fields.assignee
             }
             issuesResponse.push(issue);      
         }
-        // console.log(issuesResponse)
         res.status(200).json(issuesResponse);
     })
     .catch(err => {
@@ -191,7 +187,6 @@ app.post('/getIssue', varifyJwt, async (req, res) => {
         }
         if(data.length > 0){
             const estimate = data[0].estimate;
-            // console.log(estimate);
             return res.json(estimate)
         }else{
             return res.json(0)
@@ -201,7 +196,7 @@ app.post('/getIssue', varifyJwt, async (req, res) => {
 })
 
 app.post('/saveIssue', varifyJwt, async (req, res) => {
-    const sql = "INSERT INTO issues (`userId`, `issueId`, `projectId`, `issueKey`, `status`, `assignee`, `estimate`, `actual`) VALUES (?)";
+    const sql = "INSERT INTO issues (`userId`, `issueId`, `projectId`, `issueKey`, `assignee`, `estimate`) VALUES (?)";
     let assignee = "";
     if(req.body.issue.assignee !== null){
         assignee = req.body.issue.assignee.emailAddress;
@@ -211,10 +206,8 @@ app.post('/saveIssue', varifyJwt, async (req, res) => {
         req.body.issue.id,
         req.body.issue.project.id,
         req.body.issue.key,
-        req.body.issue.status,
         assignee,
-        req.body.estimate,
-        0
+        req.body.estimate
     ]
     db.query(sql, [values], (err, data) => {
         if(err){
@@ -246,47 +239,8 @@ app.get('/getInProgressTime', varifyJwt, async (req, res) => {
     const key = parsedUrl.query.key;
     const status = parsedUrl.query.status;
 
-    // fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
-    // method: 'GET',
-    // headers: {
-    //     'Authorization': `Basic ${Buffer.from(
-    //     `${req.user.email}:` + process.env.API_TOKEN
-    //     ).toString('base64')}`,
-    //     'Accept': 'application/json'
-    // }
-    // })
-    // .then(response => {
-    //     if (response.ok) {
-    //         return response.json();
-    //     } else {
-    //         throw new Error('Request failed');
-    //     }
-    // })
-    // .then(data => {
-    //     let response = null;
-    //     if(status === "In Progress"){
-    //         response = EstimateInProgress(data.values, data.total);
-    //     }else if(status === "Done"){
-    //         response = EstimateDone(data.values, data.total);
-    //     }
-    //     res.status(200).json(response);
-    // })
-    // .catch(err => {
-    //     console.error(err);
-    //     res.status(500).send('Internal Server Error');
-    // });
-
-    // const data = getInProgressTime(req, res, key, status);
-    // let response = null;
-    //     if(status === "In Progress"){
-    //         response = EstimateInProgress(data.values, data.total);
-    //     }else if(status === "Done"){
-    //         response = EstimateDone(data.values, data.total);
-    //     }
-    //     res.status(200).json(response);
-
     try {
-        const data = await getInProgressTime(req, key);
+        const data = await getChangelog(req, key);
     
         let response = null;
         if (status === "In Progress") {
@@ -303,29 +257,7 @@ app.get('/getInProgressTime', varifyJwt, async (req, res) => {
 
 })
 
-async function getInProgressTime(req, key){
-
-    // fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
-    // method: 'GET',
-    // headers: {
-    //     'Authorization': `Basic ${Buffer.from(
-    //     `${req.user.email}:` + process.env.API_TOKEN
-    //     ).toString('base64')}`,
-    //     'Accept': 'application/json'
-    // }
-    // })
-    // .then(response => {
-    //     if (response.ok) {
-    //         return response.json();
-    //     } else {
-    //         throw new Error('Request failed');
-    //     }
-    // })
-    // .catch(err => {
-    //     console.error(err);
-    //     res.status(500).send('Internal Server Error');
-    // });
-
+async function getChangelog(req, key){
     try {
         const response = await fetch(`https://${req.user.domain}.atlassian.net/rest/api/3/issue/${key}/changelog`, {
             method: 'GET',
@@ -372,15 +304,23 @@ function EstimateInProgress(values, count){
         const daysToSubtract = (today.isoWeekday() === 6) ? 1 : 2;
         const previousFriday = today.clone().subtract(daysToSubtract, 'days');
         currentDate = previousFriday.format('YYYY-MM-DD');
+        currentTime = moment('17:00:00', 'HH:mm:ss').format('HH:mm:ss');
     }
-        
-    //If time if after 17:00
-    //Set current time on 17:00
-    if(today.hour() > 17){
+    
+    //If time if before 09:00
+    //Set current date to previous date
+    // Set current time on 17:00
+    if(today.hour() < 9){
+        const previousDay = today.clone().subtract(1, 'days');
+        currentDate = previousDay.format('YYYY-MM-DD');
         currentTime = moment('17:00:00', 'HH:mm:ss').format('HH:mm:ss');
     }
 
-    // console.log("Pdate: " + inProgressDate + " Ptime: " + inProgressTime + " Cdate: " + currentDate + " Ctime: " + currentTime);
+    //If time if after 17:00
+    // Set current time on 17:00
+    if(today.hour() > 17){
+        currentTime = moment('17:00:00', 'HH:mm:ss').format('HH:mm:ss');
+    }
 
     const pTime = moment(inProgressTime, 'HH:mm:ss');
     const cTime = moment(currentTime, 'HH:mm:ss');
@@ -416,8 +356,6 @@ function EstimateDone(values, count){
     const inProgressTime = (moment.tz(datePartIP, 'YYYY-MM-DDTHH:mm:ss.SSS', true, offsetIP)).format('HH:mm:ss');
     const doneDate = (moment.tz(datePartD, 'YYYY-MM-DDTHH:mm:ss.SSS', true, offsetD)).format('YYYY-MM-DD');
     const doneTime = (moment.tz(datePartD, 'YYYY-MM-DDTHH:mm:ss.SSS', true, offsetD)).format('HH:mm:ss');
-
-    // console.log("Pdate: " + inProgressDate + " Ptime: " + inProgressTime + " Ddate: " + doneDate + " Dtime: " + doneTime);
 
     const pTime = moment(inProgressTime, 'HH:mm:ss');
     const dTime = moment(doneTime, 'HH:mm:ss');
@@ -473,7 +411,7 @@ function getDoneDate(values, count){
 }
 
 function getHoursDifference(firstDate, firstTime, secondDate, secondTime){
-    let hoursDifference = 0;
+    let timeDifference = 0;
     let daysDifference = 0;
     //Working hours from 09:00 to 17:00
     const start = moment('09:00:00', 'HH:mm:ss');
@@ -495,42 +433,47 @@ function getHoursDifference(firstDate, firstTime, secondDate, secondTime){
     //If difference > 0 => few days between
     if(daysDifference === -1){
         const duration = moment.duration(secondTime.diff(firstTime));
-        hoursDifference = Math.floor(duration.asMinutes());
+        timeDifference = Math.floor(duration.asMinutes());
     }else if(daysDifference === 0){
         const duration1 = moment.duration(end.diff(firstTime));
         const duration2 = moment.duration(secondTime.diff(start));
         const duration = Math.floor(duration1.asMinutes()) + Math.floor(duration2.asMinutes());
-        hoursDifference = Math.floor(duration);
+        timeDifference = Math.floor(duration);
     }else{
         const duration1 = moment.duration(end.diff(firstTime));
         const duration2 = moment.duration(secondTime.diff(start));
         const duration = Math.floor(duration1.asMinutes()) + Math.floor(duration2.asMinutes()) + 8*60*daysDifference;
-        hoursDifference = Math.floor(duration);
+        timeDifference = Math.floor(duration);
     }
 
 
-    return hoursDifference;
+    return timeDifference;
 }
 
 async function getIssuesStatistics(req, res, issues){
     let keys = [];
+    let statuses = [];
     let actuals = [];
     let estimates = [];
 
     for (const issue of issues) {
         try {
-            const data = await getInProgressTime(req, issue.issueKey);
+            const data = await getChangelog(req, issue.issueKey);
+
+            const status = await getStatus(data.values, data.total);
+            console.log(issue.issueKey + " - " + status);
 
             let response = null;
-            if (issue.status === "In Progress") {
+            if (status === "In Progress") {
                 response = EstimateInProgress(data.values, data.total);
-            } else if (issue.status === "Done") {
+            } else if (status === "Done") {
                 response = EstimateDone(data.values, data.total);
-            }else if(issue.status === "To Do"){
+            }else if(status === "To Do"){
                 continue;
             }
 
             keys.push(issue.issueKey);
+            statuses.push(status);
             estimates.push(issue.estimate*60);
             actuals.push(response.timeDifference);
         } catch (error) {
@@ -542,12 +485,31 @@ async function getIssuesStatistics(req, res, issues){
 
     const response = {
         keys: keys, 
+        statuses: statuses,
         estimates: estimates,
         actuals: actuals,
         message: "OK"
     }
 
     return response;
+}
+
+async function getStatus(values, count){
+    if(values.length === 0){
+        return "To Do";
+    }
+    for(let i = count - 1; i >= 0; i--){
+        for(let j = 0; j < values[i].items.length; j++){
+            if(values[i].items[j].field === "status"){
+                if(values[i].items[j].toString === "In Progress"){
+                    return "In Progress"
+                }else if(values[i].items[j].toString === "Done"){
+                    return "Done"
+                }
+            }
+        }
+    }
+    return "To Do";
 }
 
 app.post('/statistics/project', varifyJwt,  async (req, res) => {
@@ -568,18 +530,6 @@ app.post('/statistics/project', varifyJwt,  async (req, res) => {
 })
 
 function getProjectIssues(req){
-    // const sql = "SELECT * FROM issues WHERE `projectId` = ?";
-    // db.query(sql, [req.body.project], async (err, data) => {
-    //     if(err){
-    //         return res.json("Error: Cannot get project statistics!");
-    //     }
-    //     if(data.length > 0){
-    //         return data;
-    //         // res.status(200).json(data);            
-    //     }else{
-    //         return res.json("Fail")
-    //     }
-    // })
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM issues WHERE `projectId` = ?";
         db.query(sql, [req.body.project], (err, data) => {
@@ -588,11 +538,6 @@ function getProjectIssues(req){
           } else{
             resolve(data);
           }
-        //   else if (data.length > 0) {
-        //     resolve(data);
-        //   } else {
-        //     resolve
-        //   }
         });
       });
 }
@@ -623,11 +568,6 @@ function getProjectUserIssues(req){
           } else{
             resolve(data);
           }
-        //   else if (data.length > 0) {
-        //     resolve(data);
-        //   } else {
-        //     reject("Fail");
-        //   }
         });
       });
 }
