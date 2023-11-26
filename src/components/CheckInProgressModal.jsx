@@ -47,7 +47,6 @@ export default function AddEstimateModal({showInProgressModal, closeInProgressMo
             }
         })
         .then(res => {
-            console.log(res.data);
             setTimeDifference(res.data.timeDifference);
             const timeLeft = value*60 - res.data.timeDifference;
             setTimeLeft(timeLeft);
@@ -82,7 +81,7 @@ export default function AddEstimateModal({showInProgressModal, closeInProgressMo
                             <CloseIcon style={{marginRight: '10px', color: 'grey'}}/>
                         </IconButton>
                         <Typography id="modal-modal-title" variant="h5" component="h2">
-                            <b>Check Issue In Progress Time</b>
+                            <b>{issue?.key} In Progress time</b>
                         </Typography>
                         <Typography id="modal-modal-description" sx={{ mt: 2 }}>
 
@@ -114,14 +113,6 @@ export default function AddEstimateModal({showInProgressModal, closeInProgressMo
                                             <>
                                                 <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                                                     <p>Time is not estimated!</p>
-                                                    {/* <Button 
-                                                        variant="outlined" 
-                                                        style={{color: '#070b3f', borderColor: '#070b3f', height: '30px', marginLeft: '10px'}}
-                                                        onClick={() => {
-                                                            // setEstimateTimeModal(true);
-                                                            // closeInProgressModal();
-                                                        }}
-                                                    >Add estimate</Button> */}
                                                 </div>
                                             </>
                                         }

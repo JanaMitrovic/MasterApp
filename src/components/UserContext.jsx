@@ -14,13 +14,17 @@ export function UserProvider({ children }) {
   //Extract user data from token on page refresh
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
+    console.log("1");
     if (storedToken) {
+      console.log("2");
       try {
         const decodedToken = jwt_decode(storedToken);
         setUser(decodedToken.userData);
+        console.log("3");
       } catch (error) {
         console.error('Error decoding token:', error);
         localStorage.removeItem('token');
+        console.log("4");
       }
     }
   }, []);

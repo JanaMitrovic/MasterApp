@@ -66,7 +66,7 @@ export default function IssuesPage() {
 
     //Check if issue is already saved is db (has estimate time)
     //If res.data/estimate is not 0 that issue already exists
-    const handleEstimateTime = (selectedIssue, modal) => {
+    const handleButtonClick = (selectedIssue, modal) => {
         axios.post('http://localhost:8000/getIssue',{issue: selectedIssue}, {
             headers: {
                 'access-token' : localStorage.getItem("token")
@@ -149,7 +149,7 @@ export default function IssuesPage() {
                                                     variant="contained" 
                                                     size='small' 
                                                     style={{width: '100%', backgroundColor: '#1ba182'}}
-                                                    onClick={() => handleEstimateTime(issue, "TO DO")}
+                                                    onClick={() => handleButtonClick(issue, "TO DO")}
                                                 >Estimate time</Button>
                                             </CardActions>
                                         </>    
@@ -188,7 +188,7 @@ export default function IssuesPage() {
                                         variant="contained" 
                                         size='small' 
                                         style={{width: '100%', backgroundColor: '#1ba182'}}
-                                        onClick={() => handleEstimateTime(issue, 'IN PROGRESS')}
+                                        onClick={() => handleButtonClick(issue, 'IN PROGRESS')}
                                     >Check time in progress</Button>
                                 </CardActions>
                             </Card>
@@ -224,7 +224,7 @@ export default function IssuesPage() {
                                         variant="contained" 
                                         size='small' 
                                         style={{width: '100%', backgroundColor: '#1ba182'}}
-                                        onClick={() => handleEstimateTime(issue, "DONE")}
+                                        onClick={() => handleButtonClick(issue, "DONE")}
                                     >Show statistics</Button>
                                 </CardActions>
                             </Card>

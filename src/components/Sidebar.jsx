@@ -35,7 +35,7 @@ export default function Sidebar({isOpen, openModal, closeModal}) {
     .then(res => {
         if(res.data.message == "OK"){
             console.log(res.data)
-            navigate('/statistics', {state: {data: res.data}});
+            navigate('/statistics', {state: {data: res.data, statisticsType: "User"}});
         }else{
             alert("Cannot get project statistics!")
         }

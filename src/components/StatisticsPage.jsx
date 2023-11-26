@@ -10,9 +10,11 @@ ChartJS.register(
 export default function StatisticsPage() {
   const location = useLocation();
   const data = location.state?.data;
+  const statisticsType = location.state?.statisticsType;
+  console.log(statisticsType);
 
   const chartData = {
-    labels: data.keys,
+    labels: data.keys.map((key, index) => `${key} (${data.statuses[index]})`),
     datasets: [
         {
             label: 'Estimate',
@@ -36,12 +38,14 @@ export default function StatisticsPage() {
   }
   
   return (
-    <div className='page'>
-      <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '30px'}}>
-      <Bar data = {chartData} options = {options}></Bar>
+    <>
+      <h1 style={{marginLeft: '250px'}}>{statisticsType} statistics</h1>
+      <div className='page'>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '30px'}}>
+        <Bar data = {chartData} options = {options}></Bar>
+        </div>
       </div>
-    </div>
-    
+    </>    
   )
 
 }

@@ -32,8 +32,7 @@ export default function ProjectsPage({openModal}) {
       .catch(err => {
         alert("Your domain is not valid, please chage it!");
         openModal();
-      }
-      )
+      })
       hasRunRef.current = true;
     }
   }, []); 
@@ -56,7 +55,7 @@ export default function ProjectsPage({openModal}) {
     .then(res => {
         if(res.data.message == "OK"){
             console.log(res.data)
-            navigate('/statistics', {state: {data: res.data}});
+            navigate('/statistics', {state: {data: res.data, statisticsType: "Project"}});
         }else{
             alert("Cannot get project statistics!")
         }
@@ -79,7 +78,7 @@ export default function ProjectsPage({openModal}) {
     .then(res => {
         if(res.data.message == "OK"){
             console.log(res)
-            navigate('/statistics', {state: {data: res.data}});
+            navigate('/statistics', {state: {data: res.data, statisticsType: "User - Project"}});
         }else{
             alert("Cannot get project statistics!")
         }

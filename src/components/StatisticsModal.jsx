@@ -46,7 +46,6 @@ export default function AddEstimateModal({showStatisticsModal, closeStatsticsMod
             }
         })
         .then(res => {
-            console.log(res.data);
             setTimeDifference(res.data.timeDifference);
             const timeLeft = value*60 - res.data.timeDifference
             setTimeLeft(timeLeft);
@@ -107,7 +106,7 @@ export default function AddEstimateModal({showStatisticsModal, closeStatsticsMod
                             <CloseIcon style={{marginRight: '10px', color: 'grey'}}/>
                         </IconButton>
                         <Typography id="modal-modal-title" variant="h5" component="h2">
-                            <b>Statistics</b>
+                            <b>{issue?.key} Statistics</b>
                         </Typography>
                         <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                             {isLoading ? 

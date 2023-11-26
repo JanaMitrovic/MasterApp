@@ -21,19 +21,9 @@ export default function App() {
     setIsOpen(false);
   };
 
-  window.addEventListener('beforeunload', function (event) {
-    localStorage.clear();
-  });
-
-  const ProtectedRoute = ({ element, ...rest }) => {
-    const { user } = useUser();
-  
-    if (user.isAuthenticated) {
-      return <Route {...rest} element={element} />;
-    } else {
-      return <Navigate to="/login" />;
-    }
-  };
+  // window.addEventListener('beforeunload', function (event) {
+  //   localStorage.clear();
+  // });
 
   return (
     <UserProvider>
